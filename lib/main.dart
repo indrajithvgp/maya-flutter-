@@ -1,46 +1,72 @@
-import 'package:ECommerceApp/bottom_bar.dart';
+import 'package:ECommerceApp/consts/theme_data.dart';
+import 'package:ECommerceApp/inner_screens/product_details.dart';
+import 'package:ECommerceApp/provider/dark_theme_provider.dart';
+import 'package:ECommerceApp/provider/products.dart';
+import 'package:ECommerceApp/screens/bottom_bar.dart';
+import 'package:ECommerceApp/screens/wishlist.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'inner_screens/brands_navigation_rail.dart';
+import 'inner_screens/categories_feeds.dart';
+import 'provider/cart_provider.dart';
+import 'screens/cart.dart';
+import 'screens/feeds.dart';
 
 void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class MyApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Maya',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: MyHomePage(title: 'Tyntra '),
-    );
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  DarkThemeProvider themeChangeProvider = DarkThemeProvider();
+
+  void getCurrentAppTheme() async {
+    themeChangeProvider.darkTheme =
+        await themeChangeProvider.darkThemePreferences.getTheme();
   }
-}
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
+  void initState() {
+    getCurrentAppTheme();
+    super.initState();
+  }
 
-class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return BottomBar();
+    return MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) {
+            return themeChangeProvider;
+          }),
+          ChangeNotifierProvider(
+            create: (_) => Products(),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => CartProvider(),
+          ),
+        ],
+        child:
+            Consumer<DarkThemeProvider>(builder: (context, themeData, child) {
+          return MaterialApp(
+            title: 'Flutter Demo',
+            theme: Styles.themeData(themeChangeProvider.darkTheme, context),
+            home: BottomBarScreen(),
+            //initialRoute: '/',
+            routes: {
+              //   '/': (ctx) => LandingPage(),
+              BrandNavigationRailScreen.routeName: (ctx) =>
+                  BrandNavigationRailScreen(),
+              CartScreen.routeName: (ctx) => CartScreen(),
+              Feeds.routeName: (ctx) => Feeds(),
+              WishlistScreen.routeName: (ctx) => WishlistScreen(),
+              ProductDetails.routeName: (ctx) => ProductDetails(),
+              CategoriesFeedsScreen.routeName: (ctx) => CategoriesFeedsScreen(),
+            },
+          );
+        }));
   }
 }
